@@ -18,12 +18,12 @@ public class ApostaController {
     }
 
     @GetMapping("/{idAposta}")
-    public void verificarAposta(@PathVariable String idAposta) {
-        apostaService.verificarAposta(idAposta);
+    public Aposta verificarAposta(@PathVariable String idAposta) {
+        return apostaService.verificarAposta(idAposta);
     }
 
     @PostMapping
-    public void salvar(@RequestBody Aposta aposta) {
-        apostaService.salvar(aposta);
+    public Aposta salvar(@RequestBody Aposta aposta) {
+        return apostaService.salvar(aposta);
     }
 }

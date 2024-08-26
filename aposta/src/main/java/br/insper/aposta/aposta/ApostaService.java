@@ -25,7 +25,7 @@ public class ApostaService {
                 "http://3.81.161.81:8080/partida/" + aposta.getIdPartida(),
                 RetornarPartidaDTO.class);
 
-        if (partida.getStatusCode().is2xxSuccessful())  {
+        if (partida.getStatusCode().is2xxSuccessful()) {
             apostaRepository.save(aposta);
         } else {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Partida não encontrada.");
@@ -34,39 +34,31 @@ public class ApostaService {
     }
 
     public Aposta verificarAposta(String idAposta) {
-        Optional <Aposta> aposta = apostaRepository.findById(idAposta);
+        Optional<Aposta> aposta = apostaRepository.findById(idAposta);
         if (aposta.isPresent()) {
             if ("REALIZADA".equals(aposta.get().getStatus())) {
                 RestTemplate restTemplate = new RestTemplate();
-                try {
-                    ResponseEntity<RetornarPartidaDTO> partidaResponse = restTemplate.getForEntity(
-                            "http://3.81.161.81:8080/partida/" + aposta.get().getIdPartida(),
-                            RetornarPartidaDTO.class);
+                ResponseEntity<RetornarPartidaDTO> partidaResponse = restTemplate.getForEntity(
+                        "http://3.81.161.81:8080/partida/" + aposta.get().getIdPartida(),
+                        RetornarPartidaDTO.class);
 
-                    RetornarPartidaDTO partida = partidaResponse.getBody();
+                RetornarPartidaDTO partida = partidaResponse.getBody();
 
-                    if (partida != null && "REALIZADA".equals(partida.getStatus())) {
-                        if ((aposta.get().getResultado().equals("VITORIA_MANDANTE") && partida.getPlacarMandante() > partida.getPlacarVisitante()) ||
-                                (aposta.get().getResultado().equals("VITORIA_VISITANTE") && partida.getPlacarVisitante() > partida.getPlacarMandante()) ||
-                                (aposta.get().getResultado().equals("EMPATE") && partida.getPlacarMandante().equals(partida.getPlacarVisitante()))) {
-                            aposta.get().setStatus("GANHOU");
-                        } else {
-                            aposta.get().setStatus("PERDEU");
-                        }
-                        apostaRepository.save(aposta.get());
+                if (partida != null && "REALIZADA".equals(partida.getStatus())) {
+                    if ((aposta.get().getResultado().equals("VITORIA_MANDANTE") && partida.getPlacarMandante() > partida.getPlacarVisitante()) ||
+                            (aposta.get().getResultado().equals("VITORIA_VISITANTE") && partida.getPlacarVisitante() > partida.getPlacarMandante()) ||
+                            (aposta.get().getResultado().equals("EMPATE") && partida.getPlacarMandante().equals(partida.getPlacarVisitante()))) {
+                        aposta.get().setStatus("GANHOU");
                     } else {
-                        return aposta.get();
+                        aposta.get().setStatus("PERDEU");
                     }
-                } catch (Exception e) {
-                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Partida não encontrada.");
+                    apostaRepository.save(aposta.get());
                 }
-            } else {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Aposta não realizada.");
+                return aposta.get();
             }
-        } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Aposta não encontrada.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Aposta ainda não foi realizada.");
         }
-        return aposta.get();
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Aposta não encontrada.");
     }
 
     public List<Aposta> listar(String status) {
